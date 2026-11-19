@@ -16,7 +16,8 @@ const STEPS = [
   { at: 0.88, eyebrow: "The Signature", title: <>Smoked oud.<br /><em className="text-gold-gradient">Black amber.</em></>, body: "Drag to turn the bottle. Then make it yours." },
 ];
 
-export function Hero3D() {
+/** `productHref` comes from the server so the button never points at a product that no longer exists. */
+export function Hero3D({ productHref }: { productHref: string }) {
   const section = useRef<HTMLElement>(null);
   const progress = useRef(0);
   const [step, setStep] = useState(0);
@@ -74,6 +75,7 @@ export function Hero3D() {
         {/* Copy */}
         <div className="container-lux relative z-10 flex h-full items-end pb-24 md:items-center md:pb-0">
           <div className="max-w-xl">
+            <h1 className="sr-only">Zeb-e-Husn — luxury fragrance and grooming, made in Pakistan</h1>
             {STEPS.map((s, i) => (
               <div
                 key={i}
@@ -81,12 +83,12 @@ export function Hero3D() {
                 aria-hidden={i !== step}
               >
                 <p className="eyebrow">{s.eyebrow}</p>
-                <h1 className="h-display mt-5 text-[13vw] sm:text-7xl lg:text-8xl">{s.title}</h1>
+                <p className="h-display mt-5 text-[13vw] sm:text-7xl lg:text-8xl">{s.title}</p>
                 <p className="mt-6 max-w-md text-sm leading-relaxed text-ivory/70 md:text-base">{s.body}</p>
               </div>
             ))}
             <div className="pointer-events-auto mt-10 flex flex-wrap gap-3">
-              <Link href="/products/noir-oud-extrait" className="btn-gold">Discover Noir Oud</Link>
+              <Link href={productHref} className="btn-gold">Discover Noir Oud</Link>
               <Link href="/shop" className="btn-ghost">Shop the House</Link>
             </div>
           </div>

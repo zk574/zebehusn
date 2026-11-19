@@ -9,7 +9,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import {
   ContactShadows, Environment, Lightformer, PresentationControls, RoundedBox, Sparkles, useGLTF, Center,
 } from "@react-three/drei";
-import { Suspense, useMemo, useRef, type MutableRefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 
 export type Quality = "high" | "low";
@@ -125,6 +125,9 @@ function Bottle({ mode, progress, quality, liquid }: { mode: SceneProps["mode"];
     const tube = new THREE.MeshStandardMaterial({ color: "#ffffff", transparent: true, opacity: 0.5, roughness: 0.2 });
     return { gold, blackLacquer, glass, liq, tube };
   }, [quality, liquid]);
+
+  // These materials are created by hand, so React Three Fiber won't dispose them for us.
+  useEffect(() => () => Object.values(mats).forEach((m) => m.dispose()), [mats]);
 
   const tmpV = useMemo(() => new THREE.Vector3(), []);
   const tmpA = useMemo(() => new THREE.Vector3(), []);

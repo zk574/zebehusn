@@ -6,9 +6,9 @@ export const metadata: Metadata = { title: "Contact Us", alternates: { canonical
 
 export default function ContactPage() {
   const items = [
-    { icon: MessageCircle, label: "WhatsApp", value: "Chat with us", href: `https://wa.me/${site.contact.whatsapp}` },
-    { icon: Phone, label: "Phone", value: site.contact.phone, href: `tel:${site.contact.phone.replace(/\s/g, "")}` },
-    { icon: Mail, label: "Email", value: site.contact.email, href: `mailto:${site.contact.email}` },
+    { icon: MessageCircle, label: "WhatsApp", value: site.contact.phone, href: `https://wa.me/${site.contact.whatsapp}` },
+    { icon: Phone, label: "Phone", value: site.contact.phone, href: `tel:${site.contact.phoneIntl}` },
+    ...(site.contact.email ? [{ icon: Mail, label: "Email", value: site.contact.email, href: `mailto:${site.contact.email}` }] : []),
     { icon: MapPin, label: "Studio", value: site.contact.address },
   ];
   return (

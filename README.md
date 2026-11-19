@@ -9,22 +9,35 @@ npm run dev        # http://localhost:3000  (.env.local is already filled with y
 npm run build && npm start   # production
 ```
 Without Supabase env vars the site falls back to the sample catalogue (development only).
+In production the sample catalogue is never shown: if the database can't be read, visitors see an error page instead of fake products.
 
 ## Database setup (Supabase) — one time
 1. Supabase dashboard → **SQL Editor** → **New query**.
 2. Paste all of `supabase/migrations/001_schema.sql` → **Run**. Wait for "Success".
 3. New query → paste `supabase/migrations/002_seed.sql` → **Run** (sample products — optional).
-4. Check **Table Editor**: you should see products, categories, orders, etc.
+4. New query → paste `supabase/migrations/003_hardening.sql` → **Run**. **Required** by the current website code
+   (checkout price check, duplicate-order protection, shared rate limits). Safe with the old code too, so run it before deploying.
+5. Check **Table Editor**: you should see products, categories, orders, etc.
 
-Both files are safe to run again.
+### Lock the database to the website (do this before going live)
+1. Supabase → **Project Settings → API Keys** → copy the **Secret key**.
+2. Put it in `.env.local` and in your hosting dashboard as `SUPABASE_SECRET_KEY=...` (never `NEXT_PUBLIC_`), then redeploy.
+3. Only then run `supabase/migrations/004_lockdown.sql`.
+   After this, nobody can place orders, track orders or post reviews by calling Supabase directly with the public key —
+   everything goes through the website and its rate limits. Exact stock numbers are hidden from the public key too.
+
+All files are safe to run again, but always in order: 001 → 002 → 003 → 004.
+If you ever re-run 001, re-run 003 (and 004) after it.
 
 ### What the database enforces
 - `place_order()` is the only way to create an order: it re-prices from the database, locks rows and decrements stock atomically (no overselling), applies coupons and shipping.
-- Cancelling an order restores stock automatically; every status change is logged for tracking.
+- The checkout shows server-verified prices, coupon discount and shipping (`quote_order()`), and an order is refused if its total differs from what the customer saw.
+- Retrying "Place order" after a network error never creates a second order (idempotency key).
+- Stock follows the order status: cancelled or refunded-before-dispatch → stock goes back; re-opened → stock is taken again. Refunds after dispatch are left for you to restock by hand after inspecting the return.
 - Customers can't read other people's orders, change prices or make themselves admin (Row Level Security).
 - Reviews require a delivered order containing that product, and appear only after approval.
 - Bank account details are hidden from the public and only shown after a bank-transfer order.
-- `supabase/tests/schema.test.mjs` — 29 automated checks of the above (runs on PGlite).
+- `npm run test:db` — automated checks of all of the above, including the lockdown (runs on PGlite, no Supabase needed).
 
 ## Stack
 Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind v4 ·
@@ -33,7 +46,7 @@ Three.js + React Three Fiber + drei · GSAP ScrollTrigger · Zustand · Zod
 ## Where things live
 | What | File |
 |---|---|
-| Brand name, contacts, socials, shipping rules | `src/config/site.ts` |
+| Brand name, contacts, socials, shipping rules | `src/config/site.ts` (empty email/social links stay hidden) |
 | Design tokens (colours, fonts) | `src/app/globals.css` |
 | Sample catalogue (replace from admin in Stage 4–5) | `src/lib/seed.ts` |
 | Data access layer (swap to Supabase here) | `src/lib/catalog.ts` |

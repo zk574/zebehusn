@@ -154,7 +154,9 @@ export function ReviewsSection({ reviews }: { reviews: Review[] }) {
   );
 }
 
+/** Shown only once an Instagram URL is set in src/config/site.ts. */
 export function SocialGallery({ products }: { products: Product[] }) {
+  if (!site.social.instagram) return null;
   return (
     <section className="py-20 md:py-28">
       <div className="container-lux">

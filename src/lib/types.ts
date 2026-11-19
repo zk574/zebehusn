@@ -66,6 +66,31 @@ export interface CartLine {
   image: string | null;
 }
 
+/** Server-verified line (from quote_order / priceCart). */
+export interface QuoteLine {
+  sku: string;
+  slug: string;
+  name: string;
+  variant: string;
+  unit: number;
+  qty: number;
+  total: number;
+  stock: number; // capped at 20 — exact stock is never sent to browsers
+}
+
+/** Server-verified checkout summary. Shipping is judged on subtotal − discount. */
+export interface Quote {
+  lines: QuoteLine[];
+  problems: string[];
+  subtotal: number;
+  discount: number;
+  coupon: string | null;
+  coupon_error: string | null;
+  shipping: number;
+  total: number;
+  payments: { cod: boolean; bank: boolean };
+}
+
 export interface Review {
   name: string;
   city: string;

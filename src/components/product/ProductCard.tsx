@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { useId } from "react";
 import { Heart } from "lucide-react";
 import clsx from "clsx";
 import type { Product } from "@/lib/types";
@@ -8,16 +9,18 @@ import { formatPKR, discountPct } from "@/lib/format";
 import { useShop } from "@/store/shop";
 import { useHydrated } from "@/lib/use-cart-lines";
 import { ProductVisual } from "./ProductVisual";
-import { toCartLine } from "@/lib/cart-line";
+import { firstInStock, toCartLine } from "@/lib/cart-line";
 
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const add = useShop((s) => s.add);
   const toggleWish = useShop((s) => s.toggleWish);
   const wished = useShop((s) => s.wishlist.includes(product.slug));
   const hydrated = useHydrated();
-  const v = product.variants[0];
+  // Unique per card: the same product can appear twice on a page (e.g. two rails).
+  const visualId = `card-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const v = firstInStock(product) ?? product.variants[0];
   const off = discountPct(v.price, v.compareAt);
-  const soldOut = product.variants.every((x) => x.stock <= 0);
+  const soldOut = v.stock <= 0;
 
   return (
     <article className="group relative">
@@ -26,7 +29,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           {product.images[0] ? (
             <Image src={product.images[0]} alt={product.name} fill sizes="(max-width:768px) 50vw, 25vw" priority={priority} className="object-cover transition duration-[1.2s] ease-lux group-hover:scale-105" />
           ) : (
-            <ProductVisual shape={product.shape} tint={product.tint} id={product.slug} label={product.name} className="h-full w-full transition duration-[1.2s] ease-lux group-hover:scale-105" />
+            <ProductVisual shape={product.shape} tint={product.tint} id={visualId} label={product.name} className="h-full w-full transition duration-[1.2s] ease-lux group-hover:scale-105" />
           )}
           <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
             {product.isNew && <Tag>New</Tag>}

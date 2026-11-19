@@ -13,15 +13,17 @@ export const site = {
   currency: "PKR",
   locale: "en-PK",
   contact: {
-    email: "care@example.com", // TODO: real support email
-    phone: "+92 300 0000000", // TODO: real number
-    whatsapp: "923000000000", // international format, digits only
+    email: "", // TODO: add your support email — it stays hidden on the site while empty
+    phone: "0327 3726022",
+    phoneIntl: "+923273726022", // used for tel: links and SEO data
+    whatsapp: "923273726022", // international format, digits only
     address: "Lahore, Pakistan",
   },
+  /** Full profile URLs, e.g. "https://instagram.com/zebehusn". Empty = hidden on the site. */
   social: {
-    instagram: "https://instagram.com/",
-    facebook: "https://facebook.com/",
-    tiktok: "https://tiktok.com/",
+    instagram: "",
+    facebook: "",
+    tiktok: "",
   },
   shipping: {
     flatRate: 250,

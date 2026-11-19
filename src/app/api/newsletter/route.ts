@@ -7,7 +7,7 @@ const schema = z.object({ email: z.email().max(200) });
 
 /** Stores subscribers in Supabase; optionally also forwards to NEWSLETTER_WEBHOOK_URL (Mailchimp/Klaviyo/Zapier). */
 export async function POST(req: Request) {
-  if (!rateLimit(req, "newsletter", 5)) return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
+  if (!(await rateLimit(req, "newsletter", 5))) return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
   const email = parsed.data.email.toLowerCase();

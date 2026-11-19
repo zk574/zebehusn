@@ -14,7 +14,7 @@ const EDITIONS = [
 ];
 
 /** Interactive, drag-to-rotate product viewer. Canvas mounts only when scrolled near. */
-export function Showcase3D() {
+export function Showcase3D({ available }: { available: string[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const near = useInView(ref, "300px");
   const cap = use3DCapability();
@@ -52,7 +52,7 @@ export function Showcase3D() {
             ))}
           </div>
           <p className="mt-6 text-sm text-mist">{ed.note}</p>
-          <Link href={`/products/${ed.slug}`} className="btn-gold mt-8">Shop {ed.name}</Link>
+          <Link href={available.includes(ed.slug) ? `/products/${ed.slug}` : "/collections/perfumes"} className="btn-gold mt-8">{available.includes(ed.slug) ? `Shop ${ed.name}` : "Shop perfumes"}</Link>
         </div>
       </div>
     </section>

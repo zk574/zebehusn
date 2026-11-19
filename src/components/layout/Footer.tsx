@@ -24,6 +24,11 @@ const legal = [
 
 export async function Footer() {
   const categories = await getCategories();
+  const socials = [
+    { label: "Instagram", href: site.social.instagram },
+    { label: "Facebook", href: site.social.facebook },
+    { label: "TikTok", href: site.social.tiktok },
+  ].filter((s) => s.href);
   return (
     <footer className="relative mt-24 border-t border-line bg-onyx">
       <div className="container-lux grid gap-14 py-20 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
@@ -39,10 +44,11 @@ export async function Footer() {
       <div className="hairline" />
       <div className="container-lux flex flex-col gap-4 py-8 text-xs text-mist md:flex-row md:items-center md:justify-between">
         <p>© <Year /> {site.name}. All rights reserved.</p>
-        <div className="flex gap-6">
-          <a href={site.social.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-gold">Instagram</a>
-          <a href={site.social.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-gold">Facebook</a>
-          <a href={site.social.tiktok} target="_blank" rel="noopener noreferrer" className="hover:text-gold">TikTok</a>
+        <div className="flex flex-wrap gap-6">
+          <a href={`https://wa.me/${site.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="hover:text-gold">WhatsApp {site.contact.phone}</a>
+          {socials.map((s) => (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="hover:text-gold">{s.label}</a>
+          ))}
         </div>
         <p>Cash on Delivery · Bank Transfer · Cards (soon)</p>
       </div>

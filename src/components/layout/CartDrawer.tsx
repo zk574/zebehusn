@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useCallback, useRef } from "react";
 import clsx from "clsx";
 import { Minus, Plus, X } from "lucide-react";
 import { useShop } from "@/store/shop";
@@ -7,6 +8,7 @@ import { useCartLines, useHydrated } from "@/lib/use-cart-lines";
 import { formatPKR } from "@/lib/format";
 import { site } from "@/config/site";
 import { ProductVisual } from "@/components/product/ProductVisual";
+import { useDialog } from "@/lib/use-dialog";
 
 export function CartDrawer() {
   const open = useShop((s) => s.cartOpen);
@@ -16,12 +18,16 @@ export function CartDrawer() {
   const hydrated = useHydrated();
   const { lines, subtotal } = useCartLines();
   const remaining = Math.max(0, site.shipping.freeOver - subtotal);
+  const panel = useRef<HTMLElement>(null);
+  const close = useCallback(() => setOpen(false), [setOpen]);
+  useDialog(panel, open, close);
 
   return (
     <div className={clsx("fixed inset-0 z-[70] transition", open ? "visible" : "invisible")} aria-hidden={!open}>
       <div className={clsx("absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-500", open ? "opacity-100" : "opacity-0")} onClick={() => setOpen(false)} />
       <aside
-        role="dialog" aria-label="Shopping bag"
+        ref={panel} tabIndex={-1}
+        role="dialog" aria-modal="true" aria-label="Shopping bag"
         className={clsx("absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-onyx border-l border-line transition-transform duration-500 ease-lux", open ? "translate-x-0" : "translate-x-full")}
       >
         <div className="flex items-center justify-between border-b border-line px-6 py-5">
@@ -75,7 +81,7 @@ export function CartDrawer() {
         {hydrated && lines.length > 0 && (
           <div className="border-t border-line px-6 py-5 space-y-3">
             <div className="flex justify-between text-sm"><span className="text-mist">Subtotal</span><span>{formatPKR(subtotal)}</span></div>
-            <p className="text-[11px] text-mist">Shipping calculated at checkout.</p>
+            <p className="text-[11px] text-mist">Shipping, coupons and final prices are confirmed at checkout.</p>
             <Link href="/checkout" onClick={() => setOpen(false)} className="btn-gold w-full">Checkout</Link>
             <Link href="/cart" onClick={() => setOpen(false)} className="block text-center text-xs uppercase tracking-[0.2em] text-mist hover:text-gold">View full bag</Link>
           </div>

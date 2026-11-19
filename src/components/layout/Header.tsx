@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import clsx from "clsx";
 import { nav, site } from "@/config/site";
 import { useShop } from "@/store/shop";
 import { useCartLines, useHydrated } from "@/lib/use-cart-lines";
+import { useDialog } from "@/lib/use-dialog";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -26,9 +27,9 @@ export function Header() {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = menu ? "hidden" : "";
-  }, [menu]);
+  const menuPanel = useRef<HTMLElement>(null);
+  const closeMenu = useCallback(() => setMenu(false), []);
+  useDialog(menuPanel, menu, closeMenu);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,9 +102,9 @@ export function Header() {
       </header>
 
       {/* Mobile menu */}
-      <div className={clsx("fixed inset-0 z-[60] lg:hidden transition", menu ? "visible" : "invisible")}>
+      <div className={clsx("fixed inset-0 z-[60] lg:hidden transition", menu ? "visible" : "invisible")} aria-hidden={!menu}>
         <div className={clsx("absolute inset-0 bg-black/70 transition-opacity", menu ? "opacity-100" : "opacity-0")} onClick={() => setMenu(false)} />
-        <aside className={clsx("absolute left-0 top-0 h-full w-[86%] max-w-sm bg-onyx border-r border-line p-6 transition-transform duration-500 ease-lux flex flex-col", menu ? "translate-x-0" : "-translate-x-full")}>
+        <aside ref={menuPanel} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Menu" className={clsx("absolute left-0 top-0 h-full w-[86%] max-w-sm bg-onyx border-r border-line p-6 transition-transform duration-500 ease-lux flex flex-col", menu ? "translate-x-0" : "-translate-x-full")}>
           <div className="flex items-center justify-between mb-10">
             <Logo />
             <button onClick={() => setMenu(false)} aria-label="Close menu"><X /></button>

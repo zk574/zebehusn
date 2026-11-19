@@ -2,6 +2,9 @@
  * Catalogue data access layer (server only).
  * • Supabase configured → reads live data (cached, tag "catalog").
  * • Not configured      → sample catalogue from seed.ts (local development only).
+ *
+ * With SUPABASE_SECRET_KEY, Row Level Security is bypassed, so every query
+ * below filters hidden rows (is_active / is_approved) itself.
  */
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
@@ -10,6 +13,8 @@ import type { Category, Product, Review } from "./types";
 import { db, supabaseConfigured } from "./supabase/server";
 
 export type SortKey = "featured" | "price-asc" | "price-desc" | "new";
+
+const MAX_VISIBLE_STOCK = 20;
 
 /* ───────────────────────── Loading ───────────────────────── */
 
@@ -33,7 +38,8 @@ function mapProduct(r: Row): Product {
     usage: r.usage as string,
     variants: [...(r.product_variants ?? [])]
       .sort((a, b) => a.sort - b.sort)
-      .map((v) => ({ sku: v.sku, label: v.label, price: v.price, compareAt: v.compare_at ?? undefined, stock: v.stock })),
+      // Exact stock is never sent to browsers; 20 is the per-item order limit anyway.
+      .map((v) => ({ sku: v.sku, label: v.label, price: v.price, compareAt: v.compare_at ?? undefined, stock: Math.min(v.stock, MAX_VISIBLE_STOCK) })),
     images: (r.images as string[]) ?? [],
     videoUrl: (r.video_url as string) ?? undefined,
     modelUrl: (r.model_url as string) ?? undefined,
@@ -57,16 +63,25 @@ async function loadCatalog(): Promise<{ products: Product[]; categories: Categor
   const [p, c] = await Promise.all([
     db()
       .from("products")
-      .select("*, product_variants(sku,label,price,compare_at,stock,sort), product_categories(categories(slug))")
+      .select("*, product_variants(sku,label,price,compare_at,stock,sort,is_active), product_categories(categories(slug,is_active))")
+      .eq("is_active", true)
+      .eq("product_variants.is_active", true)
       .order("sort"),
-    db().from("categories").select("slug,name,tagline,description,tint,sort").order("sort"),
+    db().from("categories").select("slug,name,tagline,description,tint,sort").eq("is_active", true).order("sort"),
   ]);
   if (p.error || c.error) {
-    console.error("Catalogue load failed; using sample catalogue:", p.error?.message || c.error?.message);
+    const msg = p.error?.message || c.error?.message;
+    // Never show the sample catalogue (fake prices) to real customers: fail loudly in production.
+    if (process.env.NODE_ENV === "production") throw new Error(`Catalogue load failed: ${msg}`);
+    console.error("Catalogue load failed; using sample catalogue (development only):", msg);
     return { products: seedProducts, categories: seedCategories };
   }
+  const activeSlugs = new Set((c.data as Category[]).map((x) => x.slug));
   return {
-    products: (p.data as Row[]).map(mapProduct).filter((x) => x.variants.length > 0),
+    products: (p.data as Row[])
+      .map(mapProduct)
+      .map((x) => ({ ...x, categories: x.categories.filter((s) => activeSlugs.has(s)) }))
+      .filter((x) => x.variants.length > 0),
     categories: c.data as Category[],
   };
 }
@@ -123,8 +138,9 @@ export async function getReviews(productSlug?: string, limit = 6): Promise<Revie
   if (!supabaseConfigured) return [];
   let q = db()
     .from("reviews")
-    .select("name, city, rating, body, created_at, products!inner(slug, name)")
+    .select("name, city, rating, body, created_at, products!inner(slug, name, is_active)")
     .eq("is_approved", true)
+    .eq("products.is_active", true)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (productSlug) q = q.eq("products.slug", productSlug);

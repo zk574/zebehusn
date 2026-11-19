@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  if (!rateLimit(req, "reviews", 5)) return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
+  if (!(await rateLimit(req, "reviews", 5))) return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
   if (!supabaseConfigured) return NextResponse.json({ error: "Reviews are not configured yet." }, { status: 503 });
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Please check your review." }, { status: 400 });

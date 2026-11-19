@@ -10,14 +10,13 @@ import { site } from "@/config/site";
 export function AdVideo({ src = site.adVideo.src, poster = site.adVideo.poster }: { src?: string; poster?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const [load, setLoad] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     if (!src || !wrap.current) return;
     const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { setLoad(true); video.current?.play().then(() => setPlaying(true)).catch(() => {}); }
+      if (e.isIntersecting) { video.current?.play().then(() => setPlaying(true)).catch(() => {}); }
       else { video.current?.pause(); setPlaying(false); }
     }, { threshold: 0.35 });
     io.observe(wrap.current);
@@ -26,14 +25,14 @@ export function AdVideo({ src = site.adVideo.src, poster = site.adVideo.poster }
 
   const toggle = () => {
     const v = video.current; if (!v) return;
-    if (v.paused) { v.play(); setPlaying(true); } else { v.pause(); setPlaying(false); }
+    if (v.paused) { v.play().then(() => setPlaying(true)).catch(() => {}); } else { v.pause(); setPlaying(false); }
   };
 
   return (
     <section ref={wrap} aria-label="Brand film" className="relative h-[70svh] min-h-[420px] w-full overflow-hidden md:h-[90svh] grain">
       {src ? (
         <video
-          ref={video} src={load ? src : undefined} poster={poster || undefined}
+          ref={video} src={src} poster={poster || undefined}
           muted={muted} loop playsInline preload="none"
           className="absolute inset-0 h-full w-full object-cover"
         />

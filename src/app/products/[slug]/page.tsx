@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getCategory, getProduct, getProducts, getProductsBySlugs, getRelated, getReviews } from "@/lib/catalog";
 import { ReviewForm } from "@/components/product/ReviewForm";
 import { site } from "@/config/site";
+import { jsonLd } from "@/lib/json-ld";
 import { BuyBox } from "@/components/product/BuyBox";
 import { ProductMedia } from "@/components/product/ProductMedia";
 import { BoughtTogether } from "@/components/product/BoughtTogether";
@@ -66,7 +67,7 @@ export default async function ProductPage({ params }: Params) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <div className="container-lux pt-8 md:pt-12">
         <nav aria-label="Breadcrumb" className="mb-8 text-xs text-mist">
           <Link href="/" className="hover:text-gold">Home</Link> <span className="mx-2">/</span>

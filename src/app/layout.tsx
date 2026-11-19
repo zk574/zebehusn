@@ -6,6 +6,7 @@ import "@fontsource/cormorant-garamond/300-italic.css";
 import "@fontsource-variable/manrope";
 import "./globals.css";
 import { site } from "@/config/site";
+import { jsonLd } from "@/lib/json-ld";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/layout/CartDrawer";
@@ -26,15 +27,15 @@ const orgSchema = {
   "@type": "Organization",
   name: site.name,
   url: site.url,
-  sameAs: Object.values(site.social),
-  contactPoint: { "@type": "ContactPoint", telephone: site.contact.phone, contactType: "customer service", areaServed: "PK" },
+  sameAs: Object.values(site.social).filter(Boolean),
+  contactPoint: { "@type": "ContactPoint", telephone: site.contact.phoneIntl, contactType: "customer service", areaServed: "PK" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(orgSchema) }} />
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] btn-gold">Skip to content</a>
         <Header />
         <main id="main" className="flex-1">{children}</main>
